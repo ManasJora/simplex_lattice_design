@@ -18,8 +18,8 @@ import math
 def simplex_lattice_design_v69_6():
     r"""
     # Overview
-    The `simplex_lattice_design_v69_6` function is a comprehensive formulation tool designed to generate Simplex-Lattice mixture designs. 
-    It enables formulation scientists to translate active ingredient targets into practical product masses and volumes, 
+    The `simplex_lattice_design_v69_6` function is a comprehensive formulation tool designed to generate Simplex-Lattice mixture designs.
+    It enables formulation scientists to translate active ingredient targets into practical product masses and volumes,
     handling raw material purity, density, and complex solvent balancing logic.
 
     # Core Logic and Rules
@@ -33,7 +33,7 @@ def simplex_lattice_design_v69_6():
     4.  **Solvent Logic ('is_solvent'):**
         -   **False (Active):** Active content derived strictly from mass/purity.
         -   **True (Solvent):** Calculated as filler to reach `Total Mass`.
-            -   *Total Active of Solvent* = (Added Solvent Mass \times Solvent Purity) + \sum (Other Mass \times (1 - Other Purity)).
+            -   *Total Active of Solvent* = (Added Solvent Mass $\times$ Solvent Purity) + $\sum$ (Other Mass $\times$ (1 - Other Purity)).
     5.  **Validation:**
         -   **Mass Closure:** Sum of products must equal Total Mass ($\pm$ 1%).
         -   **Active Limit:** Sum of active percentages must not exceed 100%.
@@ -81,7 +81,7 @@ def simplex_lattice_design_v69_6():
     def calculate_design(component_data, degree_m, total_formula_mass, replicate, randomize):
         solvent_component_name = None
         component_names = list(component_data.keys())
-        
+
         # Palette
         base_palette = px.colors.qualitative.Plotly + px.colors.qualitative.Bold + px.colors.qualitative.Dark24
         while len(base_palette) < len(component_names): base_palette += base_palette
@@ -116,7 +116,7 @@ def simplex_lattice_design_v69_6():
                 z = [x / degree_m for x in p_tuple]
                 row_data = {}
                 temp_product_masses = {}
-                
+
                 # Base Fractions
                 for k, name in enumerate(component_names): row_data[f'{name} (Base)'] = z[k]
 
@@ -147,29 +147,29 @@ def simplex_lattice_design_v69_6():
                 # Assembly
                 final_sum_mass = sum(temp_product_masses.values())
                 is_valid, reason = True, ""
-                
+
                 if final_sum_mass > (total_formula_mass * 1.01):
                     reason, is_valid = "Sum(Product) > Total Mass", False
                 elif final_sum_mass < (total_formula_mass * 0.99) and not solvent_component_name:
-                    is_valid = True 
-                
+                    is_valid = True
+
                 sum_active_wt, sum_prod_wt = 0.0, 0.0
-                
+
                 for name in component_names:
                     p_mass = temp_product_masses.get(name, 0.0)
                     p_vol = p_mass / density_map[name]
                     p_wt = (p_mass / total_formula_mass) * 100.0 if total_formula_mass > 0 else 0
-                    
+
                     row_data[f'{name} (Product mass) [g]'] = p_mass
                     row_data[f'{name} (Product volume) [mL]'] = p_vol
                     row_data[f'{name} (Product wt) [%]'] = p_wt
-                    
+
                     if name == solvent_component_name: a_mass = total_solvent_active
                     else: a_mass = p_mass * product_purity_map[name]
-                    
+
                     a_wt = (a_mass / total_formula_mass) * 100.0 if total_formula_mass > 0 else 0
                     row_data[f'{name} (Active wt) [%]'] = a_wt
-                    
+
                     sum_active_wt += a_wt
                     sum_prod_wt += p_wt
 
@@ -189,19 +189,19 @@ def simplex_lattice_design_v69_6():
         col_active_wt = [f'{n} (Active wt) [%]' for n in component_names]
         col_mass = [f'{n} (Product mass) [g]' for n in component_names]
         col_vol = [f'{n} (Product volume) [mL]' for n in component_names]
-        
+
         base_cols = ['Formula Number'] + col_prod_wt + col_active_wt + col_mass + col_vol
         summ_cols = ['Sum (Product mass) [g]', 'Sum (Product weight) [%]', 'Sum (Active weight) [%]']
         extra_cols = ['Extra Solvent from Ingredients [g]', 'Total Solvent [g]'] if solvent_component_name else []
         final_cols = base_cols + summ_cols + extra_cols
-        
+
         df_valid = pd.DataFrame(valid_rows)
         if not df_valid.empty:
             if replicate > 1: df_valid = pd.concat([df_valid] * replicate, ignore_index=True)
             if randomize: df_valid = df_valid.sample(frac=1).reset_index(drop=True)
             df_valid.insert(0, 'Formula Number', range(1, len(df_valid) + 1))
             df_valid = df_valid.reindex(columns=final_cols)
-            
+
         df_removed = pd.DataFrame(removed_rows)
         if not df_removed.empty:
             cols_rem = ['Reason Removed'] + [c for c in final_cols if c != 'Formula Number']
@@ -212,7 +212,7 @@ def simplex_lattice_design_v69_6():
     # ==============================================================================
     # 2. UI & INTERACTION
     # ==============================================================================
-    
+
     style_css = """
     <style>
     .interface-container {
@@ -224,7 +224,7 @@ def simplex_lattice_design_v69_6():
     .widget-label { font-weight: bold; font-size: 14px; color: black !important; }
     .header-text { font-size: 20px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 15px; color: black; }
     .sub-header { font-size: 16px; font-weight: bold; margin-top: 10px; color: black; }
-    
+
     /* Input Styling */
     .widget-text input, .widget-readout input, .widget-hslider input {
         background-color: #666666 !important;
@@ -235,11 +235,11 @@ def simplex_lattice_design_v69_6():
         padding: 4px;
     }
     /* Arrows (Spinners) */
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { 
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
         -webkit-appearance: inner-spin-button !important;
         opacity: 1 !important;
-        background: #dddddd !important; 
+        background: #dddddd !important;
         filter: invert(1);
         height: 100%;
         display: block;
@@ -256,7 +256,7 @@ def simplex_lattice_design_v69_6():
     w_degree = widgets.BoundedIntText(value=3, min=1, max=15, description='Degree (m):', style={'description_width': 'initial'}, layout=widgets.Layout(width='180px'))
     w_mass = widgets.FloatText(value=100.0, description='Total Mass (g):', style={'description_width': 'initial'}, layout=widgets.Layout(width='180px'))
     w_reps = widgets.BoundedIntText(value=1, min=1, max=10, description='Replicates:', style={'description_width': 'initial'}, layout=widgets.Layout(width='180px'))
-    
+
     w_rand = widgets.Checkbox(value=False, description='Randomize')
     w_csv = widgets.Checkbox(value=False, description='Export CSV')
     w_plot = widgets.Checkbox(value=True, description='Show Plot')
@@ -266,31 +266,31 @@ def simplex_lattice_design_v69_6():
     component_rows = []
 
     def on_solvent_change(change):
-        if change['new']: 
+        if change['new']:
             for row in component_rows:
                 if row['w_solvent'] != change['owner']: row['w_solvent'].value = False
 
     def add_ingredient_row(b=None, initial_data=None):
         idx = len(component_rows) + 1
         data = initial_data if initial_data else {'name': f'Ingredient {idx}', 'purity': 100.0, 'max': 100.0, 'dens': 1.0, 'solvent': False, 'sel': False}
-        
+
         w_select = widgets.Checkbox(value=data['sel'], indent=False, layout=widgets.Layout(width='30px'))
-        w_name = widgets.Text(value=data['name'], placeholder='Name', description='Name:', 
+        w_name = widgets.Text(value=data['name'], placeholder='Name', description='Name:',
                               layout=widgets.Layout(width='400px'), style={'description_width': '45px'})
-        w_purity = widgets.BoundedFloatText(value=data['purity'], min=0.0, max=100.0, step=1.0, description='Purity (%):', 
+        w_purity = widgets.BoundedFloatText(value=data['purity'], min=0.0, max=100.0, step=1.0, description='Purity (%):',
                                             layout=widgets.Layout(width='140px'), style={'description_width': '75px'})
-        w_max = widgets.BoundedFloatText(value=data['max'], min=0.0, max=100.0, step=1.0, description='Max Active (%):', 
+        w_max = widgets.BoundedFloatText(value=data['max'], min=0.0, max=100.0, step=1.0, description='Max Active (%):',
                                          layout=widgets.Layout(width='170px'), style={'description_width': '105px'})
         w_dens = widgets.BoundedFloatText(value=data['dens'], min=0.01, max=20.0, step=0.01, description='Density (g/mL):',
                                           layout=widgets.Layout(width='170px'), style={'description_width': '105px'})
         w_solvent = widgets.Checkbox(value=data['solvent'], description='Is Solvent', indent=False, layout=widgets.Layout(width='100px'))
         w_solvent.observe(on_solvent_change, names='value')
-        
+
         btn_del = widgets.Button(icon='trash', button_style='danger', layout=widgets.Layout(width='40px', height='30px'))
-        
-        row_hbox = widgets.HBox([w_select, w_name, w_purity, w_max, w_dens, w_solvent, btn_del], 
+
+        row_hbox = widgets.HBox([w_select, w_name, w_purity, w_max, w_dens, w_solvent, btn_del],
                                 layout=widgets.Layout(align_items='center', margin='4px 0'))
-        
+
         def delete_row(btn):
             if row_hbox in rows_container.children:
                 new_list = list(rows_container.children)
@@ -298,17 +298,17 @@ def simplex_lattice_design_v69_6():
                 rows_container.children = tuple(new_list)
             for i, r in enumerate(component_rows):
                 if r['hbox'] is row_hbox: component_rows.pop(i); break
-        
+
         btn_del.on_click(delete_row)
         component_rows.append({
-            'hbox': row_hbox, 'w_select': w_select, 'w_name': w_name, 
+            'hbox': row_hbox, 'w_select': w_select, 'w_name': w_name,
             'w_purity': w_purity, 'w_max': w_max, 'w_dens': w_dens, 'w_solvent': w_solvent
         })
         rows_container.children += (row_hbox,)
 
     btn_add = widgets.Button(description='Add ingredient', icon='plus', button_style='info', layout=widgets.Layout(width='150px', margin='0 0 10px 0'))
     btn_add.on_click(add_ingredient_row)
-    
+
     btn_run = widgets.Button(description='GENERATE DESIGN', button_style='success', icon='cogs', layout=widgets.Layout(width='100%', height='50px', margin='20px 0'))
     out_display = widgets.Output()
 
@@ -316,13 +316,13 @@ def simplex_lattice_design_v69_6():
     def on_run(b):
         out_display.clear_output()
         comp_data = {}
-        
+
         if len(component_rows) < 2:
             with out_display: display(HTML("<b style='color:red'>⚠️ Needs at least 2 ingredients.</b>"))
             return
 
         selected_for_plot = []
-        
+
         for row in component_rows:
             c_name = row['w_name'].value.strip() or "Unnamed"
             comp_data[c_name] = {
@@ -357,7 +357,7 @@ def simplex_lattice_design_v69_6():
             # Visualization
             if w_plot.value and not df_valid.empty:
                 results_widgets.append(widgets.HTML("<div class='sub-header' style='color:black'>Visualization</div>"))
-                
+
                 n_sel = len(selected_for_plot)
                 if n_sel < 2 or n_sel > 3:
                     results_widgets.append(widgets.HTML(f"<b style='color:orange'>⚠️ Plot skipped: Select exactly 2 or 3 ingredients via checkboxes. (Selected: {n_sel})</b>"))
@@ -366,9 +366,9 @@ def simplex_lattice_design_v69_6():
                     df_hover = df_valid.copy()
                     for c in df_valid.columns:
                         if pd.api.types.is_float_dtype(df_valid[c]): df_hover[c] = df_hover[c].apply(lambda x: f"{x:.4f}")
-                    
+
                     custom_data = df_hover[final_cols].values
-                    
+
                     def create_hover(idx_list):
                         ht = "<b>Formula %{customdata[0]}</b><br>──────────────<br>"
                         for name in selected_for_plot:
@@ -387,43 +387,43 @@ def simplex_lattice_design_v69_6():
                         # Force 1 decimal formatting with tickformat='.1f'
                         return dict(title='', tickfont=dict(size=18, family="Arial Black", color='black'),
                                     ticklen=15, tickwidth=3, linewidth=5, linecolor=color,
-                                    gridcolor=color, griddash='dash', gridwidth=1, ticks='outside', layer='below traces', 
+                                    gridcolor=color, griddash='dash', gridwidth=1, ticks='outside', layer='below traces',
                                     dtick=20, tickformat='.1f')
 
                     fig = None
-                    
+
                     if n_sel == 3:
                         name_a, name_b, name_c = selected_for_plot
                         mask = pd.Series([True]*len(df_plot))
                         others = set(component_names) - set(selected_for_plot)
                         for o in others: mask &= (df_plot[f'{o} (Product mass) [g]'] <= 0.01)
                         plot_data = df_plot[mask]
-                        
+
                         if not plot_data.empty:
-                            fig = px.scatter_ternary(plot_data, 
-                                                     a=f'{name_a} (Product wt) [%]', 
-                                                     b=f'{name_c} (Product wt) [%]', 
+                            fig = px.scatter_ternary(plot_data,
+                                                     a=f'{name_a} (Product wt) [%]',
+                                                     b=f'{name_c} (Product wt) [%]',
                                                      c=f'{name_b} (Product wt) [%]')
-                            
+
                             idx_a, idx_b, idx_c = [component_names.index(n) for n in selected_for_plot]
-                            
-                            fig.update_layout(width=1000, height=625, 
+
+                            fig.update_layout(width=1000, height=625,
                                               title=dict(text=f'<b>Simplex-Lattice ({name_a}; {name_b}; {name_c})</b>', x=0.5, y=0.98, font=dict(size=24, color='black')),
                                               margin=dict(l=100, r=100, t=160, b=150),
-                                              ternary=dict(sum=100, 
+                                              ternary=dict(sum=100,
                                                            aaxis=get_axis_style(colors_hex[idx_a]),
                                                            baxis={**get_axis_style(colors_hex[idx_c]), 'tickangle': 60},
                                                            caxis={**get_axis_style(colors_hex[idx_b]), 'tickangle': -60},
                                                            bgcolor='#f9f9f9'))
-                            
+
                             fig.add_annotation(x=0.5, y=1.3, text=f"<b>{name_a}</b>", showarrow=False, font=dict(color=colors_hex[idx_a], size=22))
                             fig.add_annotation(x=0.1, y=-0.35, text=f"<b>{name_c}</b>", showarrow=False, font=dict(color=colors_hex[idx_c], size=22))
                             fig.add_annotation(x=0.9, y=-0.35, text=f"<b>{name_b}</b>", showarrow=False, font=dict(color=colors_hex[idx_b], size=22))
-                            
+
                             sub_custom = df_hover.loc[plot_data.index, final_cols].values
                             fig.update_traces(
-                                customdata=sub_custom, 
-                                hovertemplate=create_hover(None), 
+                                customdata=sub_custom,
+                                hovertemplate=create_hover(None),
                                 marker=dict(size=18, color='#1f77b4', line=dict(width=1, color='black')),
                                 cliponaxis=False
                             )
@@ -436,16 +436,16 @@ def simplex_lattice_design_v69_6():
                         others = set(component_names) - set(selected_for_plot)
                         for o in others: mask &= (df_plot[f'{o} (Product mass) [g]'] <= 0.01)
                         plot_data = df_plot[mask]
-                        
+
                         if not plot_data.empty:
                             fig = px.scatter(plot_data, x=f'{name_a} (Product wt) [%]', y=f'{name_b} (Product wt) [%]')
-                            fig.update_layout(title=dict(text=f'<b>{name_a} vs {name_b}</b>', font=dict(size=24, color='black')), 
+                            fig.update_layout(title=dict(text=f'<b>{name_a} vs {name_b}</b>', font=dict(size=24, color='black')),
                                               xaxis=dict(title=f"<b>{name_a} [%]</b>", tickfont=dict(size=18), gridcolor='#ddd', dtick=20, tickformat='.1f'),
                                               yaxis=dict(title=f"<b>{name_b} [%]</b>", tickfont=dict(size=18), gridcolor='#ddd', dtick=20, tickformat='.1f'))
                             sub_custom = df_hover.loc[plot_data.index, final_cols].values
                             fig.update_traces(
-                                customdata=sub_custom, 
-                                hovertemplate=create_hover(None), 
+                                customdata=sub_custom,
+                                hovertemplate=create_hover(None),
                                 marker=dict(size=18, color='#1f77b4', line=dict(width=1, color='black')),
                                 cliponaxis=False
                             )
@@ -458,9 +458,9 @@ def simplex_lattice_design_v69_6():
             # 3. Design Table
             if w_table.value and not df_valid.empty:
                 results_widgets.append(widgets.HTML("<div class='sub-header' style='color:black'>Design Table (Valid Formulas)</div>"))
-                
+
                 styler = df_valid.style.format(precision=4)
-                
+
                 styler.set_table_styles([
                     {'selector': 'th', 'props': [('background-color', '#2c3e50'), ('color', 'white'), ('font-weight', 'bold'), ('text-align', 'center'), ('border', '1px solid #333')]},
                     {'selector': 'td', 'props': [('text-align', 'center'), ('border', '1px solid #333')]},
@@ -469,7 +469,7 @@ def simplex_lattice_design_v69_6():
                 ])
                 for i, name in enumerate(component_names):
                     styler.set_properties(subset=[c for c in df_valid.columns if c.startswith(name)], **{'color': colors_hex[i], 'font-weight': 'bold'})
-                
+
                 results_widgets.append(widgets.HTML(styler.to_html()))
 
             if not w_plot.value and not w_table.value:
