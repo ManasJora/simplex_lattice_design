@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-# Leitura segura do README
+# Leitura segura do README para evitar erro de metadata
 long_description = "Ferramenta para planejamento de misturas Simplex-Lattice."
 if os.path.exists("README.md"):
     with open("README.md", "r", encoding="utf-8") as f:
